@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=conan_the_librarian
+POSTGRES_USER=iFTRfiBLMQytqRZRsumAEUKeNQcsjzoq
+POSTGRES_PASSWORD=r7DfxtjJTSkGF6XWcRWwipF7Q3MkNJTpdJdshAzdtEXwVgU5YgJFEFCq9nixgb0z
