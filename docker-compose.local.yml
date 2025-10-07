@@ -1,7 +1,7 @@
 volumes:
   conan_the_librarian_local_postgres_data: {}
   conan_the_librarian_local_postgres_data_backups: {}
-  
+
 
 services:
   django:
