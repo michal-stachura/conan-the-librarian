@@ -10,8 +10,9 @@ from conan_the_librarian.books.models import Book
 from conan_the_librarian.books.tests.factories import BookFactory
 from conan_the_librarian.readers.tests.factories import ReaderFactory
 
+pytestmark = pytest.mark.django_db
 
-@pytest.mark.django_db
+
 class TestBookViewSetList:
     @pytest.fixture(autouse=True)
     def setup_method(self, api_client):
@@ -101,3 +102,110 @@ class TestBookViewSetList:
         elif ordering == "-borrowed_at":
             # Descending by borrowed_at (newest first)
             assert titles == ["Z Book", "A Book"]
+
+
+class TestBookViewSetCreate:
+    @pytest.fixture(autouse=True)
+    def setup_method(self, api_client):
+        self.api_client = api_client
+        self.url = reverse("books-list")
+
+    def test_create_book_success(self):
+        """Should create a new book via POST request."""
+        payload = {
+            "serial_number": "123456",
+            "title": "The Pragmatic Programmer",
+            "author": "Andrew Hunt",
+        }
+
+        response = self.api_client.post(self.url, data=payload, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Book.objects.count() == 1
+
+        created = Book.objects.first()
+        assert created.title == payload["title"]
+        assert created.author == payload["author"]
+        assert created.serial_number == payload["serial_number"]
+        assert created.borrower is None
+        assert created.is_borrowed is False
+
+    def test_create_book_invalid_serial_number(self):
+        """Should reject invalid serial number format."""
+        payload = {
+            "serial_number": "ABC123",  # invalid
+            "title": "Bad Book",
+            "author": "No Name",
+        }
+
+        response = self.api_client.post(self.url, data=payload, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "serial_number" in response.data
+        assert Book.objects.count() == 0
+
+
+class TestBookViewSetDelete:
+    @pytest.fixture(autouse=True)
+    def setup_method(self, api_client):
+        self.api_client = api_client
+
+    def test_delete_book(self):
+        book = BookFactory()
+        url = reverse("books-detail", kwargs={"pk": book.id})
+        response = self.api_client.delete(url)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert Book.objects.filter(id=book.id).exists() is False
+
+    def test_delete_nonexistent_book(self):
+        url = reverse(
+            "books-detail",
+            kwargs={"pk": "11111111-1111-1111-1111-111111111111"},
+        )
+        response = self.api_client.delete(url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_cannot_delete_borrowed_book(self):
+        borrowed = BookFactory(borrower=ReaderFactory())
+        url = reverse("books-detail", kwargs={"pk": borrowed.id})
+        response = self.api_client.delete(url)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Cannot delete a borrowed book." in response.data["detail"]
+        assert Book.objects.filter(id=borrowed.id).exists()
+
+
+class TestBookBorrowReturn:
+    @pytest.fixture(autouse=True)
+    def setup(self, api_client):
+        self.api_client = api_client
+
+    def test_borrow_book(self):
+        book = BookFactory(borrower=None)
+        reader = ReaderFactory()
+        url = reverse("books-borrow", kwargs={"pk": book.id})
+        response = self.api_client.post(url, {"reader_id": str(reader.id)})
+
+        assert response.status_code == status.HTTP_200_OK
+        book.refresh_from_db()
+        assert book.borrower == reader
+        assert book.is_borrowed is True
+
+    def test_cannot_borrow_already_borrowed(self):
+        book = BookFactory(borrower=ReaderFactory())
+        url = reverse("books-borrow", kwargs={"pk": book.id})
+        response = self.api_client.post(url, {"reader_id": str(book.borrower.id)})
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_return_book(self):
+        book = BookFactory(borrower=ReaderFactory())
+        url = reverse("books-return-book", kwargs={"pk": book.id})
+        response = self.api_client.post(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        book.refresh_from_db()
+        assert book.borrower is None
+        assert book.is_borrowed is False

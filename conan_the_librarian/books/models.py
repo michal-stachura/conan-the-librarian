@@ -8,6 +8,9 @@ from conan_the_librarian.core.models import BaseModel
 class Book(BaseModel):
     """Model representing a book in the library."""
 
+    class Meta:
+        ordering = ["-created_at"]
+
     serial_number = models.CharField(
         max_length=6,
         unique=True,

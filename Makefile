@@ -30,7 +30,7 @@ test:
 test-app:
 	docker-compose -p ctl -f docker-compose.local.yml run --rm \
 	-e DJANGO_SETTINGS_MODULE=config.settings.test \
-	django pytest -x santri_app/$(app) --create-db --nomigrations
+	django pytest -x conan_the_librarian/$(app) --create-db --nomigrations
 
 test-specific:
 	docker-compose -p ctl -f docker-compose.local.yml run --rm \
@@ -48,15 +48,10 @@ cleardockerandvolumes:
 	docker-compose -p ctl -f docker-compose.local.yml down --volumes --remove-orphans --rmi all
 
 pgbash:
-	docker exec -it santri_app_local_postgres /bin/bash
+	docker exec -it conan_the_librarian_local_postgres /bin/bash
 
 bash:
-	docker exec -it santri_app_local_django /bin/bash
-
-seed:
-	docker-compose -p ctl -f docker-compose.local.yml build; \
-	docker-compose -p ctl -f docker-compose.local.yml run --rm django python manage.py migrate; \
-	docker-compose -p ctl -f docker-compose.local.yml run --rm django python manage.py shell < santri_app/utils/seed.py
+	docker exec -it conan_the_librarian_local_django /bin/bash
 
 logscelerybeat:
 	docker-compose -p ctl -f docker-compose.local.yml logs -f celerybeat
