@@ -1,7 +1,6 @@
 # ruff: noqa: ERA001, E501
 """Base settings to build other settings files upon."""
 
-
 from pathlib import Path
 
 import environ
@@ -87,6 +86,9 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "conan_the_librarian.users",
     # Your stuff: custom apps go here
+    "conan_the_librarian.core",
+    "conan_the_librarian.readers",
+    "conan_the_librarian.books",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
