@@ -47,6 +47,8 @@ urlpatterns += [
         ),
         name="api-docs",
     ),
+    # App custom API urls
+    path("api/books/", include("conan_the_librarian.books.urls")),
 ]
 
 if settings.DEBUG:
