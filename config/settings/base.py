@@ -1,7 +1,6 @@
 # ruff: noqa: ERA001, E501
 """Base settings to build other settings files upon."""
 
-
 from pathlib import Path
 
 import environ
@@ -82,11 +81,15 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "drf_spectacular",
+    "django_filters",
 ]
 
 LOCAL_APPS = [
     "conan_the_librarian.users",
     # Your stuff: custom apps go here
+    "conan_the_librarian.core",
+    "conan_the_librarian.readers",
+    "conan_the_librarian.books",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -292,8 +295,16 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "conan_the_librarian.core.pagination.DefaultPagination",
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+        "rest_framework.filters.SearchFilter",
+    ],
+    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+    "PAGE_SIZE": 100,
 }
 
 # django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
